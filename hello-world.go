@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"time"
 )
 
 func sqrt(x float64) string {
@@ -47,5 +48,17 @@ func main() {
 		pow(3, 2, 10),
 		pow(3, 3, 20),
 	)
+	fmt.Println("when is saturday?")
+	today := time.Now().Weekday()
+	switch time.Saturday {
+	case today + 0:
+		fmt.Println("Today.")
+	case today + 1:
+		fmt.Println("Tomorrow.")
+	case today + 2:
+		fmt.Println("In two days.")
+	default:
+		fmt.Println("Too far away.")
+	}
 
 }
