@@ -33,13 +33,19 @@ func sum4(nums ...int) {
 	}
 	fmt.Println(total)
 }
+func fact(n int) int {
+	if n == 0 {
+		return 1
+	}
+	return n * fact(n-1)
+}
 func main() {
 	fmt.Println("Hello, World!")
 	fmt.Println("My favorite number is", rand.Intn(10))
 	var x int = 10
 	y := 1000
-	var a = true
-	fmt.Println(x, y, a)
+	var g = true
+	fmt.Println(x, y, g)
 	fmt.Println("1+1 =", 1+1)
 	fmt.Println("go" + "lang")
 	fmt.Println("7.0/3.0 =", 7.0/3.0)
@@ -80,5 +86,38 @@ func main() {
 
 	fmt.Println(split(17))
 	sum4(1, 2, 3, 4, 5)
+	fmt.Println(fact(7))
+
+	var a [5]int
+	fmt.Println("emp:", a)
+
+	a[4] = 100
+	fmt.Println("set:", a)
+	fmt.Println("get:", a[4])
+
+	fmt.Println("len:", len(a))
+
+	b := [5]int{1, 2, 3, 4, 5}
+	fmt.Println("dcl:", b)
+
+	b = [...]int{1, 2, 3, 4, 5}
+	fmt.Println("dcl:", b)
+
+	b = [...]int{100, 3: 400, 500}
+	fmt.Println("idx:", b)
+
+	var twoD [2][3]int
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 3; j++ {
+			twoD[i][j] = i + j
+		}
+	}
+	fmt.Println("2d: ", twoD)
+
+	twoD = [2][3]int{
+		{1, 2, 3},
+		{1, 2, 3},
+	}
+	fmt.Println("2d: ", twoD)
 
 }
