@@ -19,6 +19,20 @@ func pow(x, n, lim float64) float64 {
 	}
 	return lim
 }
+func split(sum int) (x, y int) {
+	x = sum * 4 / 9
+	y = sum - x
+	return
+}
+
+func sum4(nums ...int) {
+	fmt.Print(nums, " ")
+	total := 0
+	for _, num := range nums {
+		total += num
+	}
+	fmt.Println(total)
+}
 func main() {
 	fmt.Println("Hello, World!")
 	fmt.Println("My favorite number is", rand.Intn(10))
@@ -60,5 +74,11 @@ func main() {
 	default:
 		fmt.Println("Too far away.")
 	}
+
+	defer fmt.Println("world")
+	fmt.Println("hello")
+
+	fmt.Println(split(17))
+	sum4(1, 2, 3, 4, 5)
 
 }
