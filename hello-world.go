@@ -65,6 +65,24 @@ func Scale(v *Vertex, f float64) {
 	v.X = v.X * f
 	v.Y = v.Y * f
 }
+
+type Abser interface {
+	Abs() float64
+}
+type I interface {
+	M()
+}
+
+type T struct {
+	S string
+}
+
+// This method means type T implements the interface I,
+// but we don't need to explicitly declare that it does so.
+func (t T) M() {
+	fmt.Println(t.S)
+}
+
 func main() {
 	fmt.Println("Hello, World!")
 	fmt.Println("My favorite number is", rand.Intn(10))
@@ -233,4 +251,8 @@ func main() {
 	v := Vertex{3, 4}
 	Scale(&v, 10)
 	fmt.Println(Abs(v))
+
+	var k I = T{"hello"}
+	k.M()
+
 }
