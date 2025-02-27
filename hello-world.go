@@ -52,6 +52,14 @@ func Newperson(name string) *person {
 	p.age = 42
 	return &p
 }
+
+type vertex struct {
+	X, Y int
+}
+
+func (v vertex) abs() int {
+	return v.X/5 + v.Y/4
+}
 func main() {
 	fmt.Println("Hello, World!")
 	fmt.Println("My favorite number is", rand.Intn(10))
@@ -214,6 +222,9 @@ func main() {
 		fmt.Println("n == n2")
 	}
 
-	i := person{name: "Raghav", age: 40}
+	i := person{"Raghav", 40}
 	fmt.Println(i.age)
+
+	raghav := vertex{5, 4}
+	fmt.Println(raghav.abs())
 }
