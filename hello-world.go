@@ -41,6 +41,17 @@ func fact(n int) int {
 	}
 	return n * fact(n-1)
 }
+
+type person struct {
+	name string
+	age  int
+}
+
+func Newperson(name string) *person {
+	p := person{name: name}
+	p.age = 42
+	return &p
+}
 func main() {
 	fmt.Println("Hello, World!")
 	fmt.Println("My favorite number is", rand.Intn(10))
@@ -202,4 +213,7 @@ func main() {
 	if maps.Equal(n, n2) {
 		fmt.Println("n == n2")
 	}
+
+	i := person{name: "Raghav", age: 40}
+	fmt.Println(i.age)
 }
