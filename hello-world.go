@@ -53,12 +53,17 @@ func Newperson(name string) *person {
 	return &p
 }
 
-type vertex struct {
-	X, Y int
+type Vertex struct {
+	X, Y float64
 }
 
-func (v vertex) abs() int {
-	return v.X/5 + v.Y/4
+func Abs(v Vertex) float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func Scale(v *Vertex, f float64) {
+	v.X = v.X * f
+	v.Y = v.Y * f
 }
 func main() {
 	fmt.Println("Hello, World!")
@@ -225,6 +230,7 @@ func main() {
 	i := person{"Raghav", 40}
 	fmt.Println(i.age)
 
-	raghav := vertex{5, 4}
-	fmt.Println(raghav.abs())
+	v := Vertex{3, 4}
+	Scale(&v, 10)
+	fmt.Println(Abs(v))
 }
