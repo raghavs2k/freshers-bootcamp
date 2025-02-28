@@ -10,6 +10,13 @@ func q(name string) {
 		fmt.Println(name, ":", i)
 	}
 }
+func worker(done chan bool) {
+	fmt.Print("working...")
+	time.Sleep(time.Second)
+	fmt.Println("done")
+
+	done <- true
+}
 func main() {
 
 	q("hey")
@@ -35,5 +42,60 @@ func main() {
 
 	fmt.Println(<-messages2)
 	fmt.Println(<-messages2)
+
+	done := make(chan bool, 1)
+	go worker(done)
+
+	<-done
+
+	c1 := make(chan string)
+	c2 := make(chan string)
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		c1 <- "one"
+	}()
+
+	go func() {
+		time.Sleep(2 * time.Second)
+		c2 <- "two"
+	}()
+
+	for i := 0; i < 2; i++ {
+		select {
+		case msg := <-c1:
+			fmt.Println("Recieved", msg)
+		case msg2 := <-c2:
+			fmt.Println("Recieved", msg2)
+		}
+	}
+
+	signal := make(chan string)
+	rag := make(chan string)
+
+	select {
+	case msg := <-signal:
+		fmt.Println("recieved message", msg)
+	default:
+		fmt.Println("nothing received")
+	}
+
+	msg := "hey"
+	select {
+	case signal <- msg:
+		fmt.Println("message sent", signal)
+	default:
+		fmt.Println("nothing sent")
+	}
+
+	select {
+	case msg := <-signal:
+		fmt.Println("signal recieved", msg)
+	case msg2 := <-rag:
+		fmt.Println("rag recieved", msg2)
+	default:
+		fmt.Println("no activity")
+
+	}
 
 }
