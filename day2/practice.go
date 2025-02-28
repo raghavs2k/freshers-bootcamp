@@ -98,4 +98,32 @@ func main() {
 
 	}
 
+	jobs := make(chan int, 5)
+	done2 := make(chan bool)
+
+	go func() {
+		for {
+			j, full := <-jobs
+			if full {
+				fmt.Println("Receiving:", j)
+			} else {
+				fmt.Println("All Recieved")
+				done2 <- true
+				return
+			}
+		}
+	}()
+
+	for i := 0; i < 3; i++ {
+		jobs <- i
+		fmt.Println("Sent Job:", i)
+	}
+	close(jobs)
+	fmt.Println("Sent all jobs")
+
+	<-done2
+
+	_, ok := <-jobs
+	fmt.Println("receiving more jobs:", ok)
+
 }
