@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// CreateCustomer - Add a new customer
 func CreateCustomer(c *gin.Context) {
 	var customer models.Customer
 
@@ -19,10 +18,8 @@ func CreateCustomer(c *gin.Context) {
 		return
 	}
 
-	// Generate a unique customer ID
 	customer.ID = "CST" + uuid.New().String()
 
-	// Save customer to DB
 	if err := config.DB.Create(&customer).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create customer"})
 		return
@@ -31,7 +28,6 @@ func CreateCustomer(c *gin.Context) {
 	c.JSON(http.StatusCreated, customer)
 }
 
-// GetCustomer - Retrieve a customer by ID
 func GetCustomer(c *gin.Context) {
 	id := c.Param("id")
 	var customer models.Customer
@@ -44,7 +40,6 @@ func GetCustomer(c *gin.Context) {
 	c.JSON(http.StatusOK, customer)
 }
 
-// GetAllCustomers - Retrieve all customers
 func GetAllCustomers(c *gin.Context) {
 	var customers []models.Customer
 	config.DB.Find(&customers)
@@ -52,7 +47,6 @@ func GetAllCustomers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"customers": customers})
 }
 
-// Update Customer (PATCH /customer/:id)
 func UpdateCustomer(c *gin.Context) {
 	utils.Mutex.Lock()
 	defer utils.Mutex.Unlock()
@@ -74,7 +68,6 @@ func UpdateCustomer(c *gin.Context) {
 	c.JSON(http.StatusOK, customer)
 }
 
-// Delete Customer (DELETE /customer/:id)
 func DeleteCustomer(c *gin.Context) {
 	utils.Mutex.Lock()
 	defer utils.Mutex.Unlock()

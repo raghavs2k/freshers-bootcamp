@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetTransactionHistory - Fetch all transactions
 func GetTransactionHistory(c *gin.Context) {
 	var transactions []models.Transaction
 
@@ -17,6 +16,5 @@ func GetTransactionHistory(c *gin.Context) {
 		return
 	}
 
-	// Return transaction history
 	c.JSON(http.StatusOK, gin.H{"transactions": transactions})
 }

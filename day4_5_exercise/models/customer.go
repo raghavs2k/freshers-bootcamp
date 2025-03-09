@@ -13,7 +13,6 @@ type Customer struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-// MigrateCustomers - Run migration
 func MigrateCustomers(db *gorm.DB) {
 	db.AutoMigrate(&Customer{})
 }

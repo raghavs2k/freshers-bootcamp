@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// CreateProduct - Add a new product
 func CreateProduct(c *gin.Context) {
 	var product models.Product
 
@@ -19,10 +18,8 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
-	// Generate a unique product ID
 	product.ID = "PROD" + uuid.New().String()
 
-	// Save product to DB
 	if err := config.DB.Create(&product).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create product"})
 		return
@@ -37,32 +34,27 @@ func CreateProduct(c *gin.Context) {
 	})
 }
 
-// UpdateProduct - Modify price and quantity
 func UpdateProduct(c *gin.Context) {
-	utils.Mutex.Lock()         // Lock before update
-	defer utils.Mutex.Unlock() // Unlock after update
+	utils.Mutex.Lock()
+	defer utils.Mutex.Unlock()
 
 	var product models.Product
 	id := c.Param("id")
 
-	// Find product
 	if err := config.DB.First(&product, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
 
-	// Bind JSON
 	if err := c.ShouldBindJSON(&product); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	// Save updated product
 	config.DB.Save(&product)
 	c.JSON(http.StatusOK, product)
 }
 
-// GetProduct - Retrieve a product by ID
 func GetProduct(c *gin.Context) {
 	id := c.Param("id")
 	var product models.Product
@@ -75,7 +67,6 @@ func GetProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, product)
 }
 
-// GetAllProducts - Retrieve all products
 func GetAllProducts(c *gin.Context) {
 	var products []models.Product
 	config.DB.Find(&products)
@@ -83,10 +74,9 @@ func GetAllProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"products": products})
 }
 
-// Delete Product (DELETE /product/:id)
 func DeleteProduct(c *gin.Context) {
-	utils.Mutex.Lock()         // Lock before delete
-	defer utils.Mutex.Unlock() // Unlock after delete
+	utils.Mutex.Lock()
+	defer utils.Mutex.Unlock()
 
 	id := c.Param("id")
 	if err := config.DB.Delete(&models.Product{}, "id = ?", id).Error; err != nil {

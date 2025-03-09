@@ -28,7 +28,7 @@ func BuildDBConfig() *DBConfig {
 
 	return &DBConfig{
 		Host:     os.Getenv("DB_HOST"),
-		Port:     3306, // Default MySQL Port
+		Port:     3306,
 		User:     os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
 		DBName:   os.Getenv("DB_NAME"),
@@ -68,7 +68,6 @@ func ConnectDatabase() {
 
 	fmt.Println("✅ Database connected successfully!")
 
-	// Run Auto Migrations
 	DB.AutoMigrate(&models.Customer{}, &models.Product{}, &models.Order{}, &models.OrderItem{}, &models.Transaction{})
 
 	fmt.Println("✅ Migrations applied successfully!")
