@@ -12,7 +12,7 @@ func main() {
 
 	r := gin.Default()
 
-	// Register Routes
+	// Registering all Routes
 	routes.ProductRoutes(r)
 	routes.CustomerRoutes(r)
 	routes.OrderRoutes(r)

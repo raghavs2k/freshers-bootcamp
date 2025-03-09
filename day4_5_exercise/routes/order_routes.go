@@ -11,5 +11,6 @@ func OrderRoutes(router *gin.Engine) {
 	{
 		orderRoutes.POST("/", controllers.PlaceOrder)
 		orderRoutes.GET("/:id", controllers.GetOrder)
+
 	}
 }
