@@ -16,6 +16,7 @@ func main() {
 	routes.ProductRoutes(r)
 	routes.CustomerRoutes(r)
 	routes.OrderRoutes(r)
+	routes.TransactionRoutes(r)
 
 	// Start Server
 	r.Run(":8080")
