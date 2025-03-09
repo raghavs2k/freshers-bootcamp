@@ -1,12 +1,19 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Customer struct {
-	ID   string `gorm:"primaryKey" json:"id"`
-	Name string `json:"name"`
+	ID        string    `gorm:"primaryKey" json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `gorm:"unique;not null" json:"email"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
+// MigrateCustomers - Run migration
 func MigrateCustomers(db *gorm.DB) {
 	db.AutoMigrate(&Customer{})
 }

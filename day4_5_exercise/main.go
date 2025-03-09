@@ -14,6 +14,8 @@ func main() {
 
 	// Register Routes
 	routes.ProductRoutes(r)
+	routes.CustomerRoutes(r)
+	routes.OrderRoutes(r)
 
 	// Start Server
 	r.Run(":8080")

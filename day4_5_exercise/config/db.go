@@ -1,6 +1,7 @@
 package config
 
 import (
+	"day4/models"
 	"fmt"
 	"log"
 	"os"
@@ -47,14 +48,29 @@ func DbURL(dbConfig *DBConfig) string {
 }
 
 func ConnectDatabase() {
-	dbConfig := BuildDBConfig()
-	dsn := DbURL(dbConfig)
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Error loading .env file")
+	}
 
-	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	dsn := fmt.Sprintf(
+		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"),
+		3306,
+		os.Getenv("DB_NAME"),
+	)
+
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	DB = database
 	fmt.Println("✅ Database connected successfully!")
+
+	// Run Auto Migrations
+	DB.AutoMigrate(&models.Customer{}, &models.Product{}, &models.Order{})
+
+	fmt.Println("✅ Migrations applied successfully!")
 }
