@@ -5,7 +5,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// MockDB is a struct that mocks GORM database methods
 type MockDB struct {
 	mock.Mock
 }
