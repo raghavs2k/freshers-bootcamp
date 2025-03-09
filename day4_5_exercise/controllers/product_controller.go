@@ -3,6 +3,7 @@ package controllers
 import (
 	"day4/config"
 	"day4/models"
+	"day4/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -38,32 +39,26 @@ func CreateProduct(c *gin.Context) {
 
 // UpdateProduct - Modify price and quantity
 func UpdateProduct(c *gin.Context) {
-	id := c.Param("id")
-	var product models.Product
+	utils.Mutex.Lock()         // Lock before update
+	defer utils.Mutex.Unlock() // Unlock after update
 
+	var product models.Product
+	id := c.Param("id")
+
+	// Find product
 	if err := config.DB.First(&product, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
 
-	var updateData struct {
-		Price    float64 `json:"price"`
-		Quantity int     `json:"quantity"`
-	}
-
-	if err := c.ShouldBindJSON(&updateData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Bind JSON
+	if err := c.ShouldBindJSON(&product); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	product.Price = updateData.Price
-	product.Quantity = updateData.Quantity
-
-	if err := config.DB.Save(&product).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
-		return
-	}
-
+	// Save updated product
+	config.DB.Save(&product)
 	c.JSON(http.StatusOK, product)
 }
 
@@ -86,4 +81,18 @@ func GetAllProducts(c *gin.Context) {
 	config.DB.Find(&products)
 
 	c.JSON(http.StatusOK, gin.H{"products": products})
+}
+
+// Delete Product (DELETE /product/:id)
+func DeleteProduct(c *gin.Context) {
+	utils.Mutex.Lock()         // Lock before delete
+	defer utils.Mutex.Unlock() // Unlock after delete
+
+	id := c.Param("id")
+	if err := config.DB.Delete(&models.Product{}, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete product"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Product deleted successfully"})
 }

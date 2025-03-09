@@ -3,15 +3,14 @@ package controllers
 import (
 	"day4/config"
 	"day4/models"
+	"day4/utils"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-var orderLock sync.Mutex
 var lastOrderTimes = make(map[string]time.Time) // Track last order per customer
 
 // PlaceOrder - Create a new order
@@ -22,8 +21,8 @@ func PlaceOrder(c *gin.Context) {
 		return
 	}
 
-	orderLock.Lock()
-	defer orderLock.Unlock()
+	utils.Mutex.Lock()
+	defer utils.Mutex.Unlock()
 
 	// Check cool-down period
 	lastOrderTime, exists := lastOrderTimes[order.CustomerID]
@@ -39,27 +38,42 @@ func PlaceOrder(c *gin.Context) {
 		return
 	}
 
-	// Check if enough stock is available
+	// Check stock availability
 	if product.Quantity < order.Quantity {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Not enough stock available"})
 		return
 	}
 
-	// Deduct stock & save
+	// Deduct stock
 	product.Quantity -= order.Quantity
 	if err := config.DB.Save(&product).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
 		return
 	}
 
-	// Create Order
+	// Generate unique order ID
 	order.ID = "ORD" + uuid.New().String()
 	order.Status = "order placed"
 	order.CreatedAt = time.Now()
+
+	// Save order in DB
 	if err := config.DB.Create(&order).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create order"})
 		return
 	}
+
+	// Log transaction with Order ID
+	transaction := models.Transaction{
+		ID:         "TXN" + order.ID,
+		OrderID:    order.ID, // Store Order ID in Transaction
+		CustomerID: order.CustomerID,
+		ProductID:  order.ProductID,
+		Quantity:   order.Quantity,
+		TotalPrice: float64(order.Quantity) * product.Price,
+		Status:     "order placed",
+		CreatedAt:  time.Now(),
+	}
+	config.DB.Create(&transaction)
 
 	// Update last order time
 	lastOrderTimes[order.CustomerID] = time.Now()
@@ -83,4 +97,41 @@ func GetOrder(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, order)
+}
+
+// DeleteOrder - Deletes an order using its transaction record
+func DeleteOrder(c *gin.Context) {
+	utils.Mutex.Lock()
+	defer utils.Mutex.Unlock()
+
+	orderID := c.Param("id")
+
+	// Find the order in transactions
+	var transaction models.Transaction
+	if err := config.DB.First(&transaction, "order_id = ?", orderID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Transaction record not found for this order"})
+		return
+	}
+
+	// Find the order before deleting
+	var order models.Order
+	if err := config.DB.First(&order, "id = ?", transaction.OrderID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+		return
+	}
+
+	// Delete the order
+	if err := config.DB.Delete(&order).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete order"})
+		return
+	}
+
+	// Update transaction status to "order deleted"
+	transaction.Status = "order deleted"
+	if err := config.DB.Save(&transaction).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update transaction record"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Order deleted successfully"})
 }

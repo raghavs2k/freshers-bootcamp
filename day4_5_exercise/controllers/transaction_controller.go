@@ -8,16 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetTransactionHistory - Fetch all orders as transactions
+// GetTransactionHistory - Fetch all transactions (orders placed or deleted)
 func GetTransactionHistory(c *gin.Context) {
-	var orders []models.Order
+	var transactions []models.Transaction
 
-	// Fetch all orders from DB
-	if err := config.DB.Find(&orders).Error; err != nil {
+	// Fetch all transactions from DB
+	if err := config.DB.Find(&transactions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch transactions"})
 		return
 	}
 
 	// Return transaction history
-	c.JSON(http.StatusOK, gin.H{"transactions": orders})
+	c.JSON(http.StatusOK, gin.H{"transactions": transactions})
 }

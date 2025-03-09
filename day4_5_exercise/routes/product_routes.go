@@ -12,6 +12,7 @@ func ProductRoutes(router *gin.Engine) {
 		productRoutes.POST("/", controllers.CreateProduct)
 		productRoutes.PATCH("/:id", controllers.UpdateProduct)
 		productRoutes.GET("/:id", controllers.GetProduct)
+		productRoutes.DELETE("/:id", controllers.DeleteProduct)
 	}
 
 	router.GET("/products", controllers.GetAllProducts)
