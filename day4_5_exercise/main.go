@@ -18,6 +18,9 @@ func main() {
 	routes.OrderRoutes(r)
 	routes.TransactionRoutes(r)
 
-	// Start Server
-	r.Run(":8080")
+	err := r.Run(":8080")
+	if err != nil {
+		panic("Failed to start server: " + err.Error())
+	}
+
 }

@@ -3,7 +3,6 @@ package config
 import (
 	"day4/models"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -50,7 +49,7 @@ func DbURL(dbConfig *DBConfig) string {
 func ConnectDatabase() {
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Println("Error loading .env file")
+		panic("Error loading .env file")
 	}
 
 	dsn := fmt.Sprintf(
@@ -64,7 +63,7 @@ func ConnectDatabase() {
 
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		panic("Failed to connect to database: " + err.Error())
 	}
 
 	fmt.Println("✅ Database connected successfully!")
