@@ -70,7 +70,7 @@ func ConnectDatabase() {
 	fmt.Println("✅ Database connected successfully!")
 
 	// Run Auto Migrations
-	DB.AutoMigrate(&models.Customer{}, &models.Product{}, &models.Order{}, &models.Transaction{})
+	DB.AutoMigrate(&models.Customer{}, &models.Product{}, &models.Order{}, &models.OrderItem{}, &models.Transaction{})
 
 	fmt.Println("✅ Migrations applied successfully!")
 }

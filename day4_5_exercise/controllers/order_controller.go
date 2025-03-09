@@ -13,10 +13,16 @@ import (
 
 var lastOrderTimes = make(map[string]time.Time) // Track last order per customer
 
-// PlaceOrder - Create a new order
 func PlaceOrder(c *gin.Context) {
-	var order models.Order
-	if err := c.ShouldBindJSON(&order); err != nil {
+	var req struct {
+		CustomerID string `json:"customer_id"`
+		Items      []struct {
+			ProductID string `json:"product_id"`
+			Quantity  int    `json:"quantity"`
+		} `json:"items"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -24,74 +30,94 @@ func PlaceOrder(c *gin.Context) {
 	utils.Mutex.Lock()
 	defer utils.Mutex.Unlock()
 
-	// Check cool-down period
-	lastOrderTime, exists := lastOrderTimes[order.CustomerID]
+	// Cooldown Check
+	lastOrderTime, exists := lastOrderTimes[req.CustomerID]
 	if exists && time.Since(lastOrderTime) < 5*time.Minute {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Please wait 5 minutes before placing another order"})
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Wait 5 minutes before placing another order"})
 		return
 	}
 
-	// Fetch product details
-	var product models.Product
-	if err := config.DB.First(&product, "id = ?", order.ProductID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-		return
+	// Process order
+	var total float64
+	var orderItems []models.OrderItem
+
+	for _, item := range req.Items {
+		var product models.Product
+		if err := config.DB.First(&product, "id = ?", item.ProductID).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+			return
+		}
+
+		if product.Quantity < item.Quantity {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Not enough stock for product " + product.ID})
+			return
+		}
+
+		// Deduct stock
+		product.Quantity -= item.Quantity
+		config.DB.Save(&product)
+
+		// Create order item
+		orderItems = append(orderItems, models.OrderItem{
+			ID:        "ITEM" + uuid.New().String(),
+			ProductID: item.ProductID,
+			Quantity:  item.Quantity,
+			Price:     product.Price, // Store base price
+		})
+
+		total += product.Price * float64(item.Quantity) // Calculate correct total
 	}
 
-	// Check stock availability
-	if product.Quantity < order.Quantity {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Not enough stock available"})
-		return
+	// Create Order
+	order := models.Order{
+		ID:         "ORD" + uuid.New().String(),
+		CustomerID: req.CustomerID,
+		TotalPrice: total,
+		Status:     "order placed",
+		CreatedAt:  time.Now(),
+		Items:      orderItems,
 	}
 
-	// Deduct stock
-	product.Quantity -= order.Quantity
-	if err := config.DB.Save(&product).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
-		return
-	}
-
-	// Generate unique order ID
-	order.ID = "ORD" + uuid.New().String()
-	order.Status = "order placed"
-	order.CreatedAt = time.Now()
-
-	// Save order in DB
 	if err := config.DB.Create(&order).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create order"})
 		return
 	}
-
-	// Log transaction with Order ID
+	// After successfully creating the order in PlaceOrder function:
 	transaction := models.Transaction{
-		ID:         "TXN" + order.ID,
-		OrderID:    order.ID, // Store Order ID in Transaction
+		ID:         "TXN" + uuid.New().String(),
+		OrderID:    order.ID,
 		CustomerID: order.CustomerID,
-		ProductID:  order.ProductID,
-		Quantity:   order.Quantity,
-		TotalPrice: float64(order.Quantity) * product.Price,
+		TotalPrice: total,
 		Status:     "order placed",
 		CreatedAt:  time.Now(),
 	}
-	config.DB.Create(&transaction)
 
-	// Update last order time
-	lastOrderTimes[order.CustomerID] = time.Now()
+	if err := config.DB.Create(&transaction).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create transaction"})
+		return
+	}
+
+	// Save order items
+	for i := range orderItems {
+		orderItems[i].OrderID = order.ID
+	}
+	config.DB.Create(&orderItems)
+
+	lastOrderTimes[req.CustomerID] = time.Now()
 
 	c.JSON(http.StatusCreated, gin.H{
-		"id":         order.ID,
-		"product_id": order.ProductID,
-		"quantity":   order.Quantity,
-		"status":     order.Status,
+		"order_id":    order.ID,
+		"total_price": total,
+		"status":      order.Status,
+		"items":       orderItems,
 	})
 }
 
-// GetOrder - Retrieve a single order
 func GetOrder(c *gin.Context) {
 	id := c.Param("id")
 	var order models.Order
 
-	if err := config.DB.First(&order, "id = ?", id).Error; err != nil {
+	if err := config.DB.Preload("Items").First(&order, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		return
 	}
@@ -99,24 +125,23 @@ func GetOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 
-// DeleteOrder - Deletes an order using its transaction record
+// DeleteOrder - Deletes an order and creates a transaction record
 func DeleteOrder(c *gin.Context) {
 	utils.Mutex.Lock()
 	defer utils.Mutex.Unlock()
 
 	orderID := c.Param("id")
 
-	// Find the order in transactions
-	var transaction models.Transaction
-	if err := config.DB.First(&transaction, "order_id = ?", orderID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Transaction record not found for this order"})
+	// First find the order
+	var order models.Order
+	if err := config.DB.First(&order, "id = ?", orderID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 		return
 	}
 
-	// Find the order before deleting
-	var order models.Order
-	if err := config.DB.First(&order, "id = ?", transaction.OrderID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+	// Delete associated order items first
+	if err := config.DB.Where("order_id = ?", orderID).Delete(&models.OrderItem{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete order items"})
 		return
 	}
 
@@ -126,10 +151,18 @@ func DeleteOrder(c *gin.Context) {
 		return
 	}
 
-	// Update transaction status to "order deleted"
-	transaction.Status = "order deleted"
-	if err := config.DB.Save(&transaction).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update transaction record"})
+	// Create a transaction record for the deletion
+	transaction := models.Transaction{
+		ID:         "TXN" + uuid.New().String(),
+		OrderID:    orderID,
+		CustomerID: order.CustomerID,
+		TotalPrice: order.TotalPrice,
+		Status:     "order deleted",
+		CreatedAt:  time.Now(),
+	}
+
+	if err := config.DB.Create(&transaction).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create transaction record"})
 		return
 	}
 
