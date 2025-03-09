@@ -244,6 +244,6 @@ Response:
 ---
 
 ## Author
-👨‍💻 **Your Name**  
-📧 **your.email@example.com**
+👨‍💻 **Raghav Sharma**  
+📧 **sharma.raghav@razorpay.com**
 
