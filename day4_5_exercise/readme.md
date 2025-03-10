@@ -317,3 +317,14 @@ Response:
 👨‍💻 **Raghav Sharma**  
 📧 **sharma.raghav@razorpay.com**
 
+## Appreciation for Sanjib Devnath(Golang Mentor)
+
+I would like to extend my sincere gratitude to **Sanjib Devnath** for his invaluable guidance and unwavering support throughout the Golang bootcamp. 
+
+His deep expertise, patience in addressing queries, and commitment to mentoring have significantly contributed to my learning experience. The clarity of his explanations and his willingness to assist at every stage have been truly commendable.
+
+I deeply appreciate his dedication and the time he has invested in ensuring our understanding and growth. 
+
+Thank you for your mentorship and support!
+
+
