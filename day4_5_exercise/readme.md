@@ -85,6 +85,73 @@ Each service is designed to handle a specific functionality within the applicati
 
 ---
 
+## **Database Schema**
+
+### **1. Customers Table**
+Stores customer information.
+
+| Column     | Data Type     | Constraints                  | Description             |
+|------------|-------------|------------------------------|-------------------------|
+| id         | VARCHAR(255) | PRIMARY KEY                 | Unique customer ID      |
+| name       | VARCHAR(255) | NOT NULL                    | Customer's name         |
+| email      | VARCHAR(255) | UNIQUE, NOT NULL            | Customer's email        |
+| created_at | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP   | Account creation time   |
+
+---
+
+### **2. Products Table**
+Stores product details.
+
+| Column       | Data Type     | Constraints                  | Description                |
+|-------------|-------------|------------------------------|----------------------------|
+| id          | VARCHAR(255) | PRIMARY KEY                 | Unique product ID          |
+| product_name | VARCHAR(255) | NOT NULL                    | Name of the product        |
+| price       | DECIMAL(10,2) | NOT NULL                    | Product price              |
+| quantity    | INT           | NOT NULL                    | Available stock quantity   |
+
+---
+
+### **3. Orders Table**
+Stores customer orders.
+
+| Column      | Data Type     | Constraints                                     | Description               |
+|------------|-------------|-------------------------------------------------|---------------------------|
+| id         | VARCHAR(255) | PRIMARY KEY                                     | Unique order ID           |
+| customer_id | VARCHAR(255) | FOREIGN KEY → customers(id)                     | Customer placing the order |
+| total_price | DECIMAL(10,2) | NOT NULL                                       | Total order amount        |
+| status     | ENUM('order placed', 'processed', 'failed') | DEFAULT 'order placed' | Order status              |
+| created_at | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP                       | Order placement time      |
+
+---
+
+### **4. Order_Items Table**
+Stores details of products within an order (supports multiple products per order).
+
+| Column      | Data Type     | Constraints                    | Description                 |
+|------------|-------------|--------------------------------|-----------------------------|
+| id         | VARCHAR(255) | PRIMARY KEY                  | Unique order item ID        |
+| order_id   | VARCHAR(255) | FOREIGN KEY → orders(id)     | Associated order            |
+| product_id | VARCHAR(255) | FOREIGN KEY → products(id)   | Product in the order        |
+| quantity   | INT           | NOT NULL                     | Quantity ordered            |
+| price      | DECIMAL(10,2) | NOT NULL                     | Price of the product        |
+
+---
+
+### **5. Transactions Table**
+Stores records of completed transactions.
+
+| Column       | Data Type     | Constraints                  | Description                 |
+|-------------|-------------|------------------------------|-----------------------------|
+| id          | VARCHAR(255) | PRIMARY KEY                 | Unique transaction ID       |
+| order_id    | VARCHAR(255) | FOREIGN KEY → orders(id)    | Associated order            |
+| customer_id | VARCHAR(255) | FOREIGN KEY → customers(id) | Associated customer         |
+| product_id  | VARCHAR(255) | FOREIGN KEY → products(id)  | Associated product          |
+| quantity    | INT           | NOT NULL                    | Quantity purchased          |
+| total_price | DECIMAL(10,2) | NOT NULL                    | Total transaction amount    |
+| status      | ENUM('success', 'failed', 'pending') | NOT NULL    | Transaction status         |
+| created_at  | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP   | Transaction timestamp       |
+
+
 ## Features
 ✅ Add, Update, Delete Products  
 ✅ View All Products  
@@ -242,6 +309,9 @@ Response:
 **GET** `/transactions`
 
 ---
+
+![Workflow Diagram](day4_5_exercise/Diagram.png)
+
 
 ## Author
 👨‍💻 **Raghav Sharma**  
