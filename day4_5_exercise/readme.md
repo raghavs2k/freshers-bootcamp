@@ -310,7 +310,7 @@ Response:
 
 ---
 
-![Workflow Diagram](day4_5_exercise/Diagram.png)
+![Workflow Diagram](Diagram.png)
 
 
 ## Author
